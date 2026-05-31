@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Sign In — Aniverse{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 pt-20 grid-overlay">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-neon-purple to-electric-pink flex items-center justify-center mb-4 shadow-lg">
+        <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h1 class="text-3xl font-black text-white">Welcome Back</h1>
+      <p class="text-white/40 text-sm mt-1">Sign in to your Aniverse account</p>
+    </div>
+
+    <div class="glass-card rounded-3xl p-8 border border-white/5">
+      {% if error %}
+      <div class="mb-5 px-4 py-3 rounded-xl bg-electric-pink/10 border border-electric-pink/20 text-electric-pink text-sm">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/auth/login" class="space-y-5">
+        <input type="hidden" name="redirect" value="{{ redirect | default('/') }}" />
+        <div>
+          <label class="text-xs text-white/50 font-semibold uppercase tracking-wider block mb-2">Email</label>
+          <input type="email" name="email" required placeholder="your@email.com" class="input-genz w-full" autocomplete="email" />
+        </div>
+        <div>
+          <label class="text-xs text-white/50 font-semibold uppercase tracking-wider block mb-2">Password</label>
+          <input type="password" name="password" required placeholder="••••••••" class="input-genz w-full" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 text-sm">Sign In →</button>
+      </form>
+
+      <p class="text-center text-xs text-white/30 mt-6">
+        New to Aniverse?
+        <a href="/auth/register" class="text-neon-purple font-semibold hover:text-electric-pink transition-colors">Create account</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

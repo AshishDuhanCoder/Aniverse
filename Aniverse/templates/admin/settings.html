@@ -1,0 +1,85 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Settings — Admin{% endblock %}
+{% block page_title %}Site Settings{% endblock %}
+
+{% block content %}
+
+{% if request.query_params.get('saved') %}
+<div class="mb-6 flex items-center gap-3 px-4 py-3.5 rounded-xl bg-neon-green/8 border border-neon-green/20 text-neon-green text-sm font-semibold">
+  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+  Settings saved successfully!
+</div>
+{% endif %}
+
+<div class="grid xl:grid-cols-3 gap-6">
+
+  <!-- Edit existing settings -->
+  <div class="xl:col-span-2 admin-card">
+    <div class="px-6 py-4 border-b border-white/5">
+      <h2 class="font-black text-base text-white">Homepage Content</h2>
+      <p class="text-xs text-white/30 mt-0.5">Edit hero text, CTAs, and banner copy</p>
+    </div>
+    <form method="post" action="/admin/settings/update" class="p-6 space-y-3">
+      {% for setting in settings %}
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-surface/30 border border-white/4 hover:border-white/8 transition-colors">
+        <div class="sm:w-48 flex-shrink-0">
+          <code class="text-xs font-mono text-brand/70 block">{{ setting.key }}</code>
+        </div>
+        <input type="text" name="{{ setting.key }}" value="{{ setting.value }}"
+               class="input-genz flex-1 text-sm" />
+      </div>
+      {% else %}
+      <div class="text-center py-8 text-white/20">
+        <p class="text-sm">No settings yet. Add one using the panel on the right.</p>
+      </div>
+      {% endfor %}
+
+      {% if settings %}
+      <div class="pt-2">
+        <button type="submit" class="btn-primary !py-3 px-8">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Save All Settings
+        </button>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="space-y-5">
+
+    <!-- Add new setting -->
+    <div class="admin-card p-6">
+      <h2 class="admin-section-title">Add New Setting</h2>
+      <form method="post" action="/admin/settings/update" class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Key</label>
+          <input type="text" name="_new_key" placeholder="hero_badge_text"
+                 class="input-genz font-mono text-xs" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Value</label>
+          <input type="text" name="_new_value" placeholder="New Collection Just Dropped"
+                 class="input-genz text-sm" />
+        </div>
+        <button type="submit" class="btn-primary w-full !py-2.5 !text-sm">+ Add Setting</button>
+      </form>
+    </div>
+
+    <!-- Common keys reference -->
+    <div class="admin-card p-5">
+      <h2 class="admin-section-title">Common Keys</h2>
+      <div class="space-y-1.5">
+        {% for key in ["hero_badge_text","hero_headline","hero_subheadline","hero_cta_primary","hero_cta_secondary"] %}
+        <div class="flex items-center gap-2">
+          <code class="text-[10px] font-mono text-brand/60 bg-brand/5 border border-brand/10 px-2 py-1 rounded flex-1 truncate">{{ key }}</code>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="text-[10px] text-white/20 mt-3 leading-relaxed">These keys control the homepage hero section content.</p>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

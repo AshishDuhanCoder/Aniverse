@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}My Orders — Aniverse{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-20 min-h-screen">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+      <p class="text-xs text-neon-purple uppercase tracking-[0.2em] font-semibold mb-2">✦ Account</p>
+      <h1 class="text-4xl font-black"><span class="text-white">My </span><span class="gradient-text">Orders</span></h1>
+    </div>
+
+    {% if orders %}
+    <div class="space-y-4">
+      {% for order in orders %}
+      <div class="glass-card rounded-2xl border border-white/5 overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-3">
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <p class="font-mono text-xs text-white/30">{{ order.id[:8] }}</p>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase badge-{{ order.status }}">{{ order.status }}</span>
+            </div>
+            <p class="font-black text-white">₹{{ order.total_amount | int }}</p>
+          </div>
+          <div class="text-right">
+            {% if order.created_at %}
+            <p class="text-xs text-white/30">{{ order.created_at[:10] }}</p>
+            {% endif %}
+            {% if order.items %}
+            <p class="text-xs text-white/50 mt-1">{{ order.items | length }} item(s)</p>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if order.items %}
+        <div class="border-t border-white/5 p-5 space-y-3">
+          {% for item in order.items %}
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
+              {% if item.product and item.product.image_url %}
+              <img src="{{ item.product.image_url }}" alt="" class="w-full h-full object-cover" />
+              {% else %}
+              <span>👕</span>
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold text-white truncate">{% if item.product %}{{ item.product.name }}{% else %}Product{% endif %}</p>
+              <p class="text-xs text-white/30">{{ item.size }} · {{ item.color }} × {{ item.quantity }}</p>
+            </div>
+            <p class="text-sm font-black gradient-text">₹{{ (item.price * item.quantity) | int }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if order.shipping_address %}
+        <div class="border-t border-white/5 px-5 pb-4">
+          <p class="text-[10px] text-white/20 uppercase tracking-widest mt-3 mb-1">Shipping to</p>
+          <p class="text-xs text-white/40">
+            {{ order.shipping_address.get('full_name','') }}, {{ order.shipping_address.get('city','') }}, {{ order.shipping_address.get('state','') }} — {{ order.shipping_address.get('pincode','') }}
+          </p>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-32 text-center">
+      <div class="w-24 h-24 rounded-3xl bg-surface flex items-center justify-center text-4xl mb-6">📦</div>
+      <h3 class="text-2xl font-black text-white/60 mb-2">No orders yet</h3>
+      <p class="text-white/30 text-sm mb-6">Your drops will appear here once you place an order</p>
+      <a href="/shop" class="btn-primary text-sm">Start Shopping</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

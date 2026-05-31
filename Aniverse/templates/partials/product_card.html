@@ -1,0 +1,92 @@
+<div class="product-card group"
+     x-data="{ wishlisted: $store.wishlist.has('{{ product.id }}') }">
+
+  <!-- Image area -->
+  <div class="relative overflow-hidden bg-surface" style="aspect-ratio:3/4">
+    <a href="/product/{{ product.id }}" class="block w-full h-full">
+      {% if product.image_url %}
+      <img src="{{ product.image_url }}" alt="{{ product.name }}"
+           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      {% else %}
+      <div class="w-full h-full flex items-center justify-center text-5xl opacity-10">👕</div>
+      {% endif %}
+    </a>
+
+    <!-- Badges -->
+    <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+      {% if product.featured %}
+      <span class="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-brand text-white rounded-md">Drop</span>
+      {% endif %}
+      {% if product.original_price %}
+      {% set disc = ((1 - product.price / product.original_price) * 100) | int %}
+      <span class="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-accent text-white rounded-md">{{ disc }}% OFF</span>
+      {% endif %}
+    </div>
+
+    <!-- Wishlist heart -->
+    <button @click.prevent="$store.wishlist.toggle({{ product | tojson }}); wishlisted = $store.wishlist.has('{{ product.id }}')"
+            class="wishlist-btn" :class="wishlisted ? 'wishlisted' : ''">
+      <svg class="w-3.5 h-3.5 transition-all"
+           :fill="wishlisted ? '#FF6600' : 'none'"
+           stroke="#FF6600" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+      </svg>
+    </button>
+
+    <!-- Quick add button (appears on hover) -->
+    <div class="absolute bottom-0 left-0 right-0 p-3 quick-add-btn">
+      <button onclick="quickAdd({{ product | tojson }})"
+              class="w-full py-2.5 bg-deep-black/90 backdrop-blur-sm border border-white/10 hover:border-brand/50 hover:bg-brand/10 text-white text-xs font-bold rounded-lg transition-all duration-200">
+        + Add to Bag
+      </button>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="p-3">
+    {% if product.category %}
+    <p class="text-[10px] font-bold text-brand uppercase tracking-widest mb-1">{{ product.category.name }}</p>
+    {% endif %}
+
+    <a href="/product/{{ product.id }}">
+      <h3 class="font-bold text-sm text-white leading-snug line-clamp-2 hover:text-brand transition-colors">{{ product.name }}</h3>
+    </a>
+
+    <!-- Rating (static display) -->
+    <div class="flex items-center gap-1 mt-1.5">
+      <div class="flex text-genz-yellow text-xs">★★★★<span class="text-white/20">★</span></div>
+      <span class="text-[10px] text-white/30 font-medium">4.5</span>
+    </div>
+
+    <!-- Price row -->
+    <div class="flex items-baseline gap-2 mt-2">
+      <span class="text-sm font-black gradient-text">₹{{ product.price | int }}</span>
+      {% if product.original_price %}
+      <span class="text-xs text-white/25 line-through">₹{{ product.original_price | int }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Color swatches -->
+    {% if product.colors %}
+    <div class="flex gap-1.5 mt-2.5 flex-wrap">
+      {% for color in product.colors[:5] %}
+      <span class="w-3.5 h-3.5 rounded-full border border-white/15 hover:scale-125 transition-transform cursor-pointer"
+            style="background-color:{{ color.hex }}" title="{{ color.name }}"></span>
+      {% endfor %}
+      {% if product.colors | length > 5 %}
+      <span class="text-[10px] text-white/30">+{{ product.colors | length - 5 }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Size chips -->
+    {% if product.sizes %}
+    <div class="flex gap-1 mt-2.5 flex-wrap">
+      {% for size in product.sizes[:5] %}
+      <span class="px-1.5 py-0.5 text-[9px] font-bold border border-white/8 rounded text-white/30">{{ size }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>

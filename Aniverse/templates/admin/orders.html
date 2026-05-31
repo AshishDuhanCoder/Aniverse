@@ -1,0 +1,85 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Orders — Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+
+{% block content %}
+
+<div class="admin-card">
+  <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+    <div>
+      <h2 class="font-black text-base text-white">All Orders</h2>
+      <p class="text-xs text-white/30 mt-0.5">{{ orders | length }} total order{% if orders | length != 1 %}s{% endif %}</p>
+    </div>
+    <!-- Status legend -->
+    <div class="hidden sm:flex items-center gap-2">
+      <span class="badge-pending">Pending</span>
+      <span class="badge-processing">Processing</span>
+      <span class="badge-shipped">Shipped</span>
+      <span class="badge-delivered">Delivered</span>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th class="right">Amount</th>
+          <th class="center">Status</th>
+          <th class="right">Date</th>
+          <th class="center">Update</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>
+            <a href="#" class="font-mono text-xs text-white/40 hover:text-brand transition-colors">{{ order.id[:14] }}…</a>
+          </td>
+          <td>
+            <div>
+              <p class="text-sm text-white font-medium">
+                {% if order.shipping_address %}{{ order.shipping_address.get('full_name', '—') }}{% else %}—{% endif %}
+              </p>
+              {% if order.shipping_address and order.shipping_address.get('city') %}
+              <p class="text-xs text-white/25">{{ order.shipping_address.get('city') }}, {{ order.shipping_address.get('state', '') }}</p>
+              {% endif %}
+            </div>
+          </td>
+          <td class="right">
+            <span class="font-black gradient-text">₹{{ order.total_amount | int }}</span>
+          </td>
+          <td class="center">
+            <span class="badge-{{ order.status }}">{{ order.status }}</span>
+          </td>
+          <td class="right text-xs text-white/30">
+            {% if order.created_at %}{{ order.created_at[:10] }}{% endif %}
+          </td>
+          <td class="center">
+            <form method="post" action="/admin/orders/{{ order.id }}/status" class="inline-flex justify-center">
+              <select name="status" onchange="this.form.submit()"
+                      class="input-genz !py-1 !px-2 !text-xs !w-auto cursor-pointer">
+                {% for s in ["pending","processing","shipped","delivered","cancelled"] %}
+                <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s | title }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center py-16">
+            <div class="flex flex-col items-center gap-3 text-white/20">
+              <div class="w-12 h-12 rounded-xl bg-surface flex items-center justify-center text-2xl opacity-40">📋</div>
+              <p class="text-sm">No orders yet</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

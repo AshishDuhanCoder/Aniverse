@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Shop — Aniverse{% endblock %}
+
+{% block content %}
+<div class="min-h-screen pb-20">
+
+  <!-- Page header -->
+  <div class="border-b border-white/5 bg-card-dark/60">
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-black text-white">
+            {% if current_filter == 'new' %}New Drops
+            {% elif current_filter == 'bestsellers' %}Bestsellers
+            {% elif current_filter == 'collections' %}Collections
+            {% elif current_category %}{{ current_category | title | replace('-', ' ') }}
+            {% else %}All Products{% endif %}
+          </h1>
+          {% if products %}
+          <p class="text-sm text-white/30 mt-0.5">{{ products | length }} product{% if products | length != 1 %}s{% endif %} found</p>
+          {% endif %}
+        </div>
+
+        <!-- Sort -->
+        <form method="get" action="/shop" class="flex items-center gap-2">
+          {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}" />{% endif %}
+          {% if current_filter %}<input type="hidden" name="filter" value="{{ current_filter }}" />{% endif %}
+          <select name="sort" onchange="this.form.submit()"
+                  class="input-genz !py-2 !px-3 !w-auto text-xs cursor-pointer">
+            <option value="created_at:desc" {% if current_sort == "created_at:desc" %}selected{% endif %}>Newest First</option>
+            <option value="price:asc"       {% if current_sort == "price:asc" %}selected{% endif %}>Price: Low → High</option>
+            <option value="price:desc"      {% if current_sort == "price:desc" %}selected{% endif %}>Price: High → Low</option>
+          </select>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+    <!-- ─── Horizontal filter bar ─── -->
+    <div class="flex flex-col gap-3 mb-6">
+
+      <!-- Category pills -->
+      <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none" style="-ms-overflow-style:none;scrollbar-width:none">
+        <a href="/shop{% if current_filter %}?filter={{ current_filter }}{% endif %}"
+           class="filter-chip {% if not current_category %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="/shop?category={{ cat.slug }}{% if current_filter %}&filter={{ current_filter }}{% endif %}"
+           class="filter-chip {% if current_category == cat.slug %}active{% endif %}">
+          {{ cat.name }}
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- Quick-filter + price row -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs text-white/30 font-semibold mr-1">Filter:</span>
+
+        <a href="/shop{% if current_category %}?category={{ current_category }}{% endif %}"
+           class="filter-chip text-xs {% if not current_filter %}active{% endif %}">All</a>
+
+        {% for label, val in [("🔥 Bestsellers","bestsellers"),("⚡ New Drops","new")] %}
+        <a href="/shop?filter={{ val }}{% if current_category %}&category={{ current_category }}{% endif %}"
+           class="filter-chip text-xs {% if current_filter == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+
+        <!-- Price filter inline -->
+        <form method="get" action="/shop" class="flex items-center gap-2 ml-auto">
+          {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}" />{% endif %}
+          {% if current_filter %}<input type="hidden" name="filter" value="{{ current_filter }}" />{% endif %}
+          {% if current_sort and current_sort != "created_at:desc" %}<input type="hidden" name="sort" value="{{ current_sort }}" />{% endif %}
+          <select name="max_price" onchange="this.form.submit()"
+                  class="input-genz !py-1.5 !px-2.5 !w-auto text-xs cursor-pointer">
+            <option value="">Any Price</option>
+            <option value="499"  {% if max_price == 499 %}selected{% endif %}>Under ₹500</option>
+            <option value="999"  {% if max_price == 999 %}selected{% endif %}>Under ₹1,000</option>
+            <option value="1999" {% if max_price == 1999 %}selected{% endif %}>Under ₹2,000</option>
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <!-- ─── Product grid ─── -->
+    {% if products %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-5">
+      {% for product in products %}
+      {% include "partials/product_card.html" %}
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-32 text-center">
+      <div class="w-20 h-20 rounded-2xl bg-surface flex items-center justify-center text-4xl mb-5 opacity-40">👕</div>
+      <h3 class="text-xl font-black text-white/50 mb-2">No products found</h3>
+      <p class="text-white/25 text-sm mb-6">Try a different filter or browse all products</p>
+      <a href="/shop" class="btn-sm-primary">Clear Filters</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+function quickAdd(product) {
+  const size = (product.sizes || [])[0] || 'M';
+  const color = ((product.colors || [])[0] || {}).name || 'Default';
+  Alpine.store('cart').addItem(product, size, color, 1);
+}
+</script>
+{% endblock %}

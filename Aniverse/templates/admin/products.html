@@ -1,0 +1,106 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Products — Admin{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block topbar_actions %}
+<a href="/admin/products/new" class="btn-primary !py-2 !px-4 !text-xs">+ New Product</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-card">
+  <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+    <div>
+      <h2 class="font-black text-base text-white">All Products</h2>
+      <p class="text-xs text-white/30 mt-0.5">{{ products | length }} listing{% if products | length != 1 %}s{% endif %} in catalogue</p>
+    </div>
+    <a href="/admin/products/new" class="btn-ghost text-xs">+ Add New</a>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th class="right">Price</th>
+          <th class="center">Featured</th>
+          <th class="center">Stock</th>
+          <th class="right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-surface overflow-hidden flex-shrink-0 border border-white/5">
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-full object-cover" />
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-lg opacity-20">👕</div>
+                {% endif %}
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-white text-sm leading-tight">{{ product.name }}</p>
+                {% if product.slug %}
+                <p class="text-xs text-white/25 font-mono mt-0.5">/{{ product.slug }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if product.category %}
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md border border-brand/20 text-brand/70 bg-brand/5">{{ product.category.name }}</span>
+            {% else %}
+            <span class="text-white/20">—</span>
+            {% endif %}
+          </td>
+          <td class="right">
+            <p class="font-black text-white">₹{{ product.price | int }}</p>
+            {% if product.original_price %}
+            <p class="text-xs text-white/20 line-through">₹{{ product.original_price | int }}</p>
+            {% endif %}
+          </td>
+          <td class="center">
+            {% if product.featured %}
+            <span class="inline-flex items-center gap-1 text-xs font-bold text-neon-green">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Yes
+            </span>
+            {% else %}
+            <span class="text-white/20 text-xs">—</span>
+            {% endif %}
+          </td>
+          <td class="center">
+            <span class="text-sm font-semibold {% if product.stock_count and product.stock_count < 10 %}text-accent{% else %}text-white/50{% endif %}">
+              {{ product.stock_count or '∞' }}
+            </span>
+          </td>
+          <td class="right">
+            <div class="flex gap-1.5 justify-end">
+              <a href="/admin/products/{{ product.id }}/edit" class="btn-ghost">Edit</a>
+              <form method="post" action="/admin/products/{{ product.id }}/delete"
+                    onsubmit="return confirm('Delete {{ product.name | replace("'", "\\'") }}? This cannot be undone.')">
+                <button type="submit" class="btn-danger">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center py-16">
+            <div class="flex flex-col items-center gap-3 text-white/20">
+              <div class="w-12 h-12 rounded-xl bg-surface flex items-center justify-center text-2xl opacity-40">📦</div>
+              <p class="text-sm">No products yet.</p>
+              <a href="/admin/products/new" class="text-brand text-sm font-semibold hover:text-accent transition-colors">+ Add your first product →</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

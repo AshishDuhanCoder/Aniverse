@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed — Aniverse{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 pt-20">
+  <div class="text-center max-w-lg w-full">
+    <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-neon-purple/20 to-electric-pink/20 flex items-center justify-center text-5xl mb-6 animate-float">🎉</div>
+    <h1 class="text-4xl font-black mb-3"><span class="text-white">Order </span><span class="gradient-text">Confirmed!</span></h1>
+    <p class="text-white/50 text-sm mb-8 leading-relaxed">Your drop is locked in. We'll send a confirmation soon.<br/>Time to flex. 🔥</p>
+
+    <div class="glass-card rounded-2xl p-6 border border-neon-purple/20 mb-8 text-left space-y-3">
+      <p class="text-xs text-white/40 font-bold uppercase tracking-widest mb-3">What happens next?</p>
+      {% for step in ["Order is being packed (24-48 hrs)", "Shipped via partner courier", "Delivered in 3-7 business days"] %}
+      <div class="flex items-center gap-3">
+        <span class="w-6 h-6 rounded-full bg-neon-purple/20 text-neon-purple flex items-center justify-center text-xs font-black flex-shrink-0">{{ loop.index }}</span>
+        <p class="text-sm text-white/60">{{ step }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="flex gap-4 justify-center">
+      <a href="/orders" class="btn-primary text-sm">Track Orders</a>
+      <a href="/shop" class="btn-outline text-sm">Keep Shopping</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

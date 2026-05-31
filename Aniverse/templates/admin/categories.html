@@ -1,0 +1,86 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Categories — Admin{% endblock %}
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+
+<div class="grid xl:grid-cols-3 gap-6">
+
+  <!-- Add category form -->
+  <div class="admin-card p-6">
+    <h2 class="admin-section-title">Add New Category</h2>
+    <form method="post" action="/admin/categories/add" class="space-y-4">
+      <div class="form-group">
+        <label class="form-label">Name <span class="text-accent">*</span></label>
+        <input type="text" name="name" required placeholder="e.g. Oversized Fits" class="input-genz" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Slug <span class="text-white/20 normal-case font-normal">auto-generated</span></label>
+        <input type="text" name="slug" placeholder="oversized-fits" class="input-genz" />
+        <p class="text-[10px] text-white/20 mt-1">Used in URL: /shop?category=<em>slug</em></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description <span class="text-white/20 normal-case font-normal">optional</span></label>
+        <input type="text" name="description" placeholder="Loose, comfy, iconic" class="input-genz" />
+      </div>
+      <button type="submit" class="btn-primary w-full !py-3">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Category
+      </button>
+    </form>
+  </div>
+
+  <!-- Categories list -->
+  <div class="xl:col-span-2 admin-card">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+      <div>
+        <h2 class="font-black text-base text-white">All Categories</h2>
+        <p class="text-xs text-white/30 mt-0.5">{{ categories | length }} categor{% if categories | length == 1 %}y{% else %}ies{% endif %}</p>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Description</th>
+            <th class="right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cat in categories %}
+          <tr>
+            <td>
+              <p class="font-bold text-white text-sm">{{ cat.name }}</p>
+            </td>
+            <td>
+              <a href="/shop?category={{ cat.slug }}" target="_blank"
+                 class="font-mono text-xs text-brand/60 hover:text-brand transition-colors">/{{ cat.slug }}</a>
+            </td>
+            <td class="text-white/35 text-xs">{{ cat.description or '—' }}</td>
+            <td class="right">
+              <form method="post" action="/admin/categories/{{ cat.id }}/delete"
+                    onsubmit="return confirm('Delete {{ cat.name | replace("'", "\\'") }}?')">
+                <button type="submit" class="btn-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center py-12">
+              <div class="flex flex-col items-center gap-2 text-white/20">
+                <div class="text-2xl opacity-40">🏷️</div>
+                <p class="text-sm">No categories yet. Add one on the left.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

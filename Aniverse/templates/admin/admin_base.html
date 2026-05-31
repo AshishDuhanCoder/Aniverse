@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Admin — Aniverse{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand':       '#A855F7',
+            'neon-purple': '#A855F7',
+            'accent':      '#FF6600',
+            'electric-pink':'#FF6600',
+            'cyber-cyan':  '#00F5FF',
+            'neon-green':  '#39FF14',
+            'genz-yellow': '#FFD600',
+            'deep-black':  '#0A0A0F',
+            'card-dark':   '#111118',
+            'surface':     '#1A1A24',
+          }
+        }
+      }
+    }
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="/static/css/custom.css" />
+  <style>
+    /* ── Admin-specific styles ── */
+    .admin-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.875rem;
+      border-radius: 0.625rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.45);
+      text-decoration: none;
+      transition: all 0.18s;
+    }
+    .admin-nav-link:hover { color: white; background: rgba(255,255,255,0.05); }
+    .admin-nav-link.active { color: white; background: rgba(168,85,247,0.15); border-left: 2px solid #A855F7; margin-left: -1px; padding-left: calc(0.875rem - 1px); }
+    .admin-nav-link .nav-icon { width: 1.125rem; height: 1.125rem; flex-shrink: 0; opacity: 0.7; }
+    .admin-nav-link.active .nav-icon { opacity: 1; }
+
+    .stat-card {
+      background: #111118;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: rgba(255,255,255,0.1); }
+
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .admin-table thead tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .admin-table thead th { padding: 0.75rem 1.25rem; text-align: left; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); white-space: nowrap; }
+    .admin-table thead th.right { text-align: right; }
+    .admin-table thead th.center { text-align: center; }
+    .admin-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+    .admin-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .admin-table tbody tr:last-child { border-bottom: none; }
+    .admin-table td { padding: 0.875rem 1.25rem; color: rgba(255,255,255,0.7); vertical-align: middle; }
+    .admin-table td.right { text-align: right; }
+    .admin-table td.center { text-align: center; }
+
+    .admin-card {
+      background: #111118;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .admin-section-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
+    .form-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+
+    .btn-danger {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent; color: #FF6600;
+      font-size: 0.75rem; font-weight: 700;
+      padding: 0.35rem 0.75rem; border-radius: 0.5rem;
+      border: 1px solid rgba(255,102,0,0.25);
+      transition: all 0.2s; cursor: pointer;
+    }
+    .btn-danger:hover { background: rgba(255,102,0,0.1); border-color: rgba(255,102,0,0.5); }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent; color: rgba(255,255,255,0.5);
+      font-size: 0.75rem; font-weight: 600;
+      padding: 0.35rem 0.75rem; border-radius: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.2s; cursor: pointer; text-decoration: none;
+    }
+    .btn-ghost:hover { color: white; border-color: rgba(255,255,255,0.25); }
+
+    [x-cloak] { display: none !important; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-deep-black text-white min-h-screen antialiased">
+
+<div class="flex min-h-screen" x-data="{ sidebarOpen: false }">
+
+  <!-- Mobile overlay -->
+  <div x-show="sidebarOpen" x-cloak @click="sidebarOpen = false"
+       x-transition:enter="transition-opacity duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+       x-transition:leave="transition-opacity duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+       class="fixed inset-0 bg-black/60 z-30 lg:hidden"></div>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="fixed left-0 top-0 bottom-0 z-40 w-60 bg-card-dark border-r border-white/5 flex flex-col transition-transform duration-300"
+         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+
+    <!-- Brand -->
+    <div class="p-5 border-b border-white/5">
+      <a href="/" class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand to-accent flex items-center justify-center shadow-lg shadow-brand/20">
+          <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div>
+          <p class="font-black text-sm text-white leading-none">ANIVERSE</p>
+          <p class="text-[10px] text-brand/60 font-semibold mt-0.5">Admin Panel</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Nav links -->
+    {% set path = request.url.path %}
+    <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest px-3 pt-1 pb-2">Navigation</p>
+
+      <a href="/admin" class="admin-nav-link {% if path == '/admin' %}active{% endif %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </a>
+
+      <a href="/admin/products" class="admin-nav-link {% if path.startswith('/admin/products') %}active{% endif %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Products
+      </a>
+
+      <a href="/admin/orders" class="admin-nav-link {% if path.startswith('/admin/orders') %}active{% endif %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Orders
+      </a>
+
+      <a href="/admin/categories" class="admin-nav-link {% if path.startswith('/admin/categories') %}active{% endif %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+        Categories
+      </a>
+
+      <a href="/admin/settings" class="admin-nav-link {% if path.startswith('/admin/settings') %}active{% endif %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Settings
+      </a>
+
+      <div class="pt-3 mt-2 border-t border-white/5">
+        <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest px-3 pb-2">Storefront</p>
+        <a href="/" target="_blank" class="admin-nav-link">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          View Store
+        </a>
+        <a href="/shop" target="_blank" class="admin-nav-link">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          Shop Page
+        </a>
+      </div>
+    </nav>
+
+    <!-- User footer -->
+    {% if user %}
+    <div class="p-4 border-t border-white/5 bg-surface/20">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand to-accent flex items-center justify-center text-xs font-black flex-shrink-0">
+          {{ user.name[0] | upper }}
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-bold text-white truncate">{{ user.name }}</p>
+          <p class="text-[10px] text-white/30 truncate">{{ user.email }}</p>
+        </div>
+        <a href="/auth/logout" title="Sign Out"
+           class="w-7 h-7 rounded-lg bg-white/5 hover:bg-accent/10 border border-white/8 hover:border-accent/30 flex items-center justify-center text-white/30 hover:text-accent transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </aside>
+
+  <!-- ═══ MAIN AREA ═══ -->
+  <div class="flex-1 lg:ml-60 flex flex-col min-h-screen">
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-20 bg-deep-black/95 backdrop-blur-md border-b border-white/5">
+      <div class="flex items-center gap-4 px-5 sm:px-6 h-14">
+        <!-- Mobile hamburger -->
+        <button @click="sidebarOpen = true" class="lg:hidden icon-btn -ml-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+
+        <!-- Page title slot -->
+        <div class="flex items-center gap-2 min-w-0">
+          {% block breadcrumb %}
+          <span class="text-sm font-black text-white">{% block page_title %}Dashboard{% endblock %}</span>
+          {% endblock %}
+        </div>
+
+        <!-- Right actions slot -->
+        <div class="ml-auto flex items-center gap-3">
+          {% block topbar_actions %}{% endblock %}
+          <span class="text-xs text-white/20 hidden sm:block">Admin Panel</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="flex-1 p-5 sm:p-6 lg:p-8">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

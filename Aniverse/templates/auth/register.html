@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Create Account — Aniverse{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 pt-20 grid-overlay">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-neon-purple to-electric-pink flex items-center justify-center mb-4 shadow-lg">
+        <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h1 class="text-3xl font-black text-white">Join Aniverse</h1>
+      <p class="text-white/40 text-sm mt-1">Create your account and cop the drops</p>
+    </div>
+
+    <div class="glass-card rounded-3xl p-8 border border-white/5">
+      {% if error %}
+      <div class="mb-5 px-4 py-3 rounded-xl bg-electric-pink/10 border border-electric-pink/20 text-electric-pink text-sm">{{ error }}</div>
+      {% endif %}
+
+      {% if success %}
+      <div class="mb-5 px-4 py-3 rounded-xl bg-neon-green/10 border border-neon-green/20 text-neon-green text-sm">
+        Account created! Check <strong>{{ registered_email }}</strong> for a confirmation email, then <a href="/auth/login" class="underline">sign in</a>.
+      </div>
+      {% else %}
+      <form method="post" action="/auth/register" class="space-y-5">
+        <div>
+          <label class="text-xs text-white/50 font-semibold uppercase tracking-wider block mb-2">Full Name</label>
+          <input type="text" name="name" required placeholder="Your Name" class="input-genz w-full" autocomplete="name" />
+        </div>
+        <div>
+          <label class="text-xs text-white/50 font-semibold uppercase tracking-wider block mb-2">Email</label>
+          <input type="email" name="email" required placeholder="your@email.com" class="input-genz w-full" autocomplete="email" />
+        </div>
+        <div>
+          <label class="text-xs text-white/50 font-semibold uppercase tracking-wider block mb-2">Password</label>
+          <input type="password" name="password" required placeholder="Min. 6 characters" class="input-genz w-full" autocomplete="new-password" minlength="6" />
+        </div>
+        <div>
+          <label class="text-xs text-white/50 font-semibold uppercase tracking-wider block mb-2">Confirm Password</label>
+          <input type="password" name="confirm" required placeholder="Repeat password" class="input-genz w-full" autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 text-sm">Create Account →</button>
+      </form>
+      {% endif %}
+
+      <p class="text-center text-xs text-white/30 mt-6">
+        Already have an account?
+        <a href="/auth/login" class="text-neon-purple font-semibold hover:text-electric-pink transition-colors">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Aniverse — Wear The Universe{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'neon-purple': '#A855F7',
+            'brand':       '#A855F7',
+            'electric-pink': '#FF6600',
+            'accent':      '#FF6600',
+            'cyber-cyan':  '#00F5FF',
+            'neon-green':  '#39FF14',
+            'genz-yellow': '#FFD600',
+            'hot-orange':  '#FF6B00',
+            'deep-black':  '#0A0A0F',
+            'card-dark':   '#111118',
+            'surface':     '#1A1A24',
+          }
+        }
+      }
+    }
+  </script>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="/static/css/custom.css" />
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-deep-black text-white min-h-screen antialiased" x-data>
+
+  <!-- ═══ ANNOUNCEMENT STRIP ═══ -->
+  <div class="offer-strip" x-data="{
+    msgs: [
+      '🚀 FREE SHIPPING on all orders above ₹999',
+      '✨ Use code ANIME10 for 10% off your first order',
+      '⚡ New anime drops every Friday — stay tuned',
+      '↩️ Easy 15-day returns · 100% secure payments',
+    ],
+    idx: 0,
+    init() { setInterval(() => { this.idx = (this.idx + 1) % this.msgs.length }, 3200) }
+  }">
+    <div class="flex items-center justify-center py-2 px-4 gap-4 text-xs font-semibold tracking-wide">
+      <span x-text="msgs[idx]" class="transition-all duration-300"></span>
+    </div>
+  </div>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="sticky top-0 left-0 right-0 z-50 bg-deep-black/95 backdrop-blur-md border-b border-white/5"
+          x-data="{ searchOpen: false, mobileOpen: false, userOpen: false, q: '' }">
+
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center h-16 gap-3 lg:gap-6">
+
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2 shrink-0 mr-2">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand to-accent flex items-center justify-center shadow-lg shadow-brand/30">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span class="text-xl font-black tracking-tight text-white hidden sm:block">ANIVERSE</span>
+        </a>
+
+        <!-- Desktop nav links -->
+        <nav class="hidden lg:flex items-center gap-6">
+          <a href="/shop" class="nav-link">All</a>
+          <a href="/shop?filter=new" class="nav-link">New Drops</a>
+          <a href="/shop?filter=bestsellers" class="nav-link">Bestsellers</a>
+          <a href="/shop?filter=collections" class="nav-link">Collections</a>
+        </nav>
+
+        <!-- Desktop search -->
+        <div class="hidden lg:flex flex-1 max-w-xs xl:max-w-sm relative ml-auto">
+          <input type="text" x-model="q" placeholder="Search anime tees, drops..."
+                 @keydown.enter="window.location.href = '/shop?q=' + q"
+                 class="search-input pr-9" />
+          <button @click="window.location.href = '/shop?q=' + q"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </button>
+        </div>
+
+        <!-- Right icons -->
+        <div class="flex items-center gap-0.5 ml-auto lg:ml-3">
+
+          <!-- Mobile search toggle -->
+          <button @click="searchOpen = !searchOpen" class="lg:hidden icon-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </button>
+
+          <!-- Wishlist -->
+          <button @click="$store.wishlist.open = true" class="icon-btn relative hidden sm:flex" title="Wishlist">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <span x-show="$store.wishlist.count > 0" x-text="$store.wishlist.count" class="badge-count"></span>
+          </button>
+
+          <!-- Account -->
+          {% if user %}
+          <div class="relative hidden sm:block" @click.outside="userOpen = false">
+            <button @click="userOpen = !userOpen" class="icon-btn" title="Account">
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-brand to-accent flex items-center justify-center text-xs font-black select-none">{{ user.name[0] | upper }}</div>
+            </button>
+            <div x-show="userOpen" x-cloak class="dropdown-menu">
+              <div class="px-4 py-3 border-b border-white/5">
+                <p class="text-[11px] text-white/35 mb-0.5">Signed in as</p>
+                <p class="text-sm font-semibold text-white truncate">{{ user.email }}</p>
+              </div>
+              <div class="py-1">
+                <a href="/orders" class="dropdown-item">📦 My Orders</a>
+                {% if user.is_admin %}<a href="/admin" class="dropdown-item" style="color:#A855F7">🛡️ Admin Panel</a>{% endif %}
+                <a href="/auth/logout" class="dropdown-item" style="color:#FF6600">Sign Out</a>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <a href="/auth/login" class="icon-btn hidden sm:flex" title="Sign In">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </a>
+          {% endif %}
+
+          <!-- Cart bag -->
+          <button @click="$store.cart.open = true" class="icon-btn relative" title="Cart">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <span x-show="$store.cart.count > 0" x-text="$store.cart.count" class="badge-count"></span>
+          </button>
+
+          <!-- Mobile hamburger -->
+          <button @click="mobileOpen = !mobileOpen" class="lg:hidden icon-btn ml-1">
+            <svg x-show="!mobileOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg x-show="mobileOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile search bar -->
+      <div x-show="searchOpen" x-cloak class="lg:hidden pb-3 -mt-1">
+        <div class="relative">
+          <input type="text" x-model="q" placeholder="Search products..."
+                 @keydown.enter="window.location.href = '/shop?q=' + q"
+                 class="search-input pr-9" x-ref="mobileSearch" />
+          <button @click="window.location.href = '/shop?q=' + q"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile nav menu -->
+    <div x-show="mobileOpen" x-cloak class="lg:hidden border-t border-white/5 bg-card-dark">
+      <div class="max-w-screen-xl mx-auto px-4 py-4 space-y-0.5">
+        <a href="/shop" class="mobile-nav-link">🛍️ All Products</a>
+        <a href="/shop?filter=new" class="mobile-nav-link">⚡ New Drops</a>
+        <a href="/shop?filter=bestsellers" class="mobile-nav-link">🔥 Bestsellers</a>
+        <a href="/shop?filter=collections" class="mobile-nav-link">💎 Collections</a>
+        <div class="border-t border-white/5 pt-3 mt-2 space-y-0.5">
+          <button @click="$store.wishlist.open = true; mobileOpen = false" class="mobile-nav-link w-full text-left">♡ Wishlist
+            <span x-show="$store.wishlist.count > 0" x-text="`(${$store.wishlist.count})`" class="text-accent ml-1 text-xs"></span>
+          </button>
+          {% if user %}
+          <a href="/orders" class="mobile-nav-link">📦 My Orders</a>
+          {% if user.is_admin %}<a href="/admin" class="mobile-nav-link" style="color:#A855F7">🛡️ Admin</a>{% endif %}
+          <a href="/auth/logout" class="mobile-nav-link" style="color:#FF6600">🚪 Sign Out</a>
+          {% else %}
+          <a href="/auth/login" class="mobile-nav-link">👤 Sign In / Register</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ WISHLIST SIDEBAR ═══ -->
+  <div x-data x-cloak>
+    <div x-show="$store.wishlist.open" @click="$store.wishlist.open = false"
+         x-transition:enter="transition-opacity duration-200"
+         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity duration-150"
+         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"></div>
+
+    <div x-show="$store.wishlist.open"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+         class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-card-dark border-l border-white/5 flex flex-col shadow-2xl">
+
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          <span class="font-black text-base">Wishlist</span>
+          <span x-text="`(${$store.wishlist.count})`" class="text-xs text-white/30 font-medium"></span>
+        </div>
+        <button @click="$store.wishlist.open = false" class="icon-btn text-white/40 hover:text-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        <template x-if="$store.wishlist.items.length === 0">
+          <div class="flex flex-col items-center justify-center h-full gap-4 text-center py-20">
+            <svg class="w-16 h-16 text-white/8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <div>
+              <p class="font-bold text-white/40">Your wishlist is empty</p>
+              <p class="text-xs text-white/20 mt-1">Save items you love</p>
+            </div>
+            <button @click="$store.wishlist.open = false; window.location.href='/shop'" class="btn-sm-primary">Explore Products</button>
+          </div>
+        </template>
+
+        <template x-for="item in $store.wishlist.items" :key="item.id">
+          <div class="flex gap-3 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors bg-surface/30">
+            <a :href="`/product/${item.id}`" @click="$store.wishlist.open = false"
+               class="w-16 h-16 rounded-lg bg-surface overflow-hidden flex-shrink-0 block">
+              <template x-if="item.image_url"><img :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" /></template>
+              <template x-if="!item.image_url"><div class="w-full h-full flex items-center justify-center text-2xl opacity-30">👕</div></template>
+            </a>
+            <div class="flex-1 min-w-0">
+              <a :href="`/product/${item.id}`" @click="$store.wishlist.open = false">
+                <p class="font-bold text-sm text-white truncate hover:text-brand transition-colors" x-text="item.name"></p>
+              </a>
+              <p class="text-brand font-black text-sm mt-0.5" x-text="`₹${Number(item.price).toLocaleString('en-IN')}`"></p>
+              <div class="flex items-center gap-2 mt-2">
+                <button @click="$store.cart.addItem(item, (item.sizes||['M'])[0], ((item.colors||[{}])[0]||{}).name||'Default'); $store.wishlist.open = false; $store.cart.open = true"
+                        class="btn-xs-primary">Add to Cart</button>
+                <button @click="$store.wishlist.removeItem(item.id)" class="text-xs text-white/25 hover:text-accent transition-colors">Remove</button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CART SIDEBAR ═══ -->
+  <div x-data x-cloak>
+    <div x-show="$store.cart.open" @click="$store.cart.open = false"
+         x-transition:enter="transition-opacity duration-200"
+         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity duration-150"
+         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"></div>
+
+    <div x-show="$store.cart.open"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+         class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-card-dark border-l border-white/5 flex flex-col shadow-2xl">
+
+      <!-- Cart header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="font-black text-base">Your Bag</span>
+          <span x-text="`(${$store.cart.count})`" class="text-xs text-white/30 font-medium"></span>
+        </div>
+        <button @click="$store.cart.open = false" class="icon-btn text-white/40 hover:text-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Free shipping progress -->
+      <div class="px-5 py-3 border-b border-white/5 bg-surface/40">
+        <template x-if="$store.cart.total < 999">
+          <div>
+            <div class="flex justify-between text-xs mb-2">
+              <span class="text-white/50">Add <span class="text-brand font-bold" x-text="`₹${999 - Math.floor($store.cart.total)}`"></span> more for free shipping</span>
+              <span class="text-white/20 text-[11px]">₹999</span>
+            </div>
+            <div class="h-1.5 bg-white/8 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-brand to-accent rounded-full transition-all duration-500"
+                   :style="`width:${Math.min(($store.cart.total/999)*100,100)}%`"></div>
+            </div>
+          </div>
+        </template>
+        <template x-if="$store.cart.total >= 999">
+          <p class="text-xs font-semibold flex items-center gap-1.5" style="color:#39FF14">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            You unlocked FREE SHIPPING!
+          </p>
+        </template>
+      </div>
+
+      <!-- Cart items -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        <template x-if="$store.cart.items.length === 0">
+          <div class="flex flex-col items-center justify-center h-full gap-4 text-center py-20">
+            <svg class="w-16 h-16 text-white/8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <div>
+              <p class="font-bold text-white/40">Your bag is empty</p>
+              <p class="text-xs text-white/20 mt-1">Add items to get started</p>
+            </div>
+            <button @click="$store.cart.open = false; window.location.href='/shop'" class="btn-sm-primary">Shop Now</button>
+          </div>
+        </template>
+
+        <template x-for="item in $store.cart.items" :key="item.id + item.size + item.color">
+          <div class="flex gap-3 p-3 rounded-xl border border-white/5 hover:border-white/8 transition-colors">
+            <a :href="`/product/${item.id}`" @click="$store.cart.open = false"
+               class="w-16 h-20 rounded-lg bg-surface overflow-hidden flex-shrink-0 block">
+              <template x-if="item.image_url"><img :src="item.image_url" :alt="item.name" class="w-full h-full object-cover" /></template>
+              <template x-if="!item.image_url"><div class="w-full h-full flex items-center justify-center text-2xl opacity-20">👕</div></template>
+            </a>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-sm text-white truncate leading-snug" x-text="item.name"></p>
+              <p class="text-xs text-white/35 mt-0.5" x-text="`${item.size} · ${item.color}`"></p>
+              <p class="font-black text-sm mt-1 gradient-text" x-text="`₹${(item.price * item.quantity).toLocaleString('en-IN')}`"></p>
+              <div class="flex items-center justify-between mt-2.5">
+                <div class="flex items-center gap-1.5 border border-white/10 rounded-lg px-2 py-1">
+                  <button @click="$store.cart.updateQuantity(item.id, item.size, item.color, item.quantity - 1)"
+                          class="w-5 h-5 flex items-center justify-center text-white/50 hover:text-white text-base leading-none">−</button>
+                  <span x-text="item.quantity" class="text-sm font-bold w-4 text-center"></span>
+                  <button @click="$store.cart.updateQuantity(item.id, item.size, item.color, item.quantity + 1)"
+                          class="w-5 h-5 flex items-center justify-center text-white/50 hover:text-white text-base leading-none">+</button>
+                </div>
+                <button @click="$store.cart.removeItem(item.id, item.size, item.color)"
+                        class="text-xs text-white/20 hover:text-accent transition-colors">Remove</button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Cart footer -->
+      <template x-if="$store.cart.items.length > 0">
+        <div class="p-5 border-t border-white/5 space-y-3 bg-surface/20">
+          <div class="flex justify-between text-sm text-white/50">
+            <span>Subtotal</span>
+            <span class="text-white font-semibold" x-text="`₹${$store.cart.total.toLocaleString('en-IN')}`"></span>
+          </div>
+          <div class="flex justify-between text-sm text-white/50">
+            <span>Shipping</span>
+            <span :class="$store.cart.total >= 999 ? 'font-bold' : ''"
+                  :style="$store.cart.total >= 999 ? 'color:#39FF14' : ''"
+                  x-text="$store.cart.total >= 999 ? 'FREE' : '₹99'"></span>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-white/5">
+            <span class="font-black">Total</span>
+            <span class="font-black text-lg gradient-text"
+                  x-text="`₹${($store.cart.total + ($store.cart.total >= 999 ? 0 : 99)).toLocaleString('en-IN')}`"></span>
+          </div>
+          <a href="/payment/checkout" @click="$store.cart.open = false"
+             class="btn-primary w-full text-center block !py-3.5">Proceed to Checkout →</a>
+          <div class="flex items-center justify-center gap-4 text-[10px] text-white/20">
+            <span>🔒 Secure</span><span>·</span><span>↩️ Easy Returns</span><span>·</span><span>🚚 Fast Delivery</span>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <main>{% block content %}{% endblock %}</main>
+
+  {% block footer %}
+  <footer class="bg-card-dark border-t border-white/5 mt-12">
+
+    <!-- Benefits bar -->
+    <div class="border-b border-white/5">
+      <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l-1 12h16L19 8"/></svg>
+            </div>
+            <div>
+              <p class="font-bold text-sm">Free Shipping</p>
+              <p class="text-xs text-white/35 mt-0.5">On orders above ₹999</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </div>
+            <div>
+              <p class="font-bold text-sm">Easy Returns</p>
+              <p class="text-xs text-white/35 mt-0.5">15-day hassle-free policy</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-genz-yellow/10 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5 text-genz-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <div>
+              <p class="font-bold text-sm">Secure Payment</p>
+              <p class="text-xs text-white/35 mt-0.5">100% safe & encrypted</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-cyber-cyan/10 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </div>
+            <div>
+              <p class="font-bold text-sm">24/7 Support</p>
+              <p class="text-xs text-white/35 mt-0.5">Always here for you</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main footer links -->
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <div class="col-span-2 md:col-span-2">
+          <a href="/" class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand to-accent flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <span class="text-xl font-black">ANIVERSE</span>
+          </a>
+          <p class="text-sm text-white/35 max-w-xs leading-relaxed">Anime-inspired streetwear for the bold generation. Every drop tells a story.</p>
+          <div class="flex gap-2 mt-5">
+            <a href="#" class="social-icon">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <a href="#" class="social-icon">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/></svg>
+            </a>
+            <a href="#" class="social-icon">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.35a8.16 8.16 0 004.77 1.52V7.42a4.85 4.85 0 01-1-.73z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Shop</h4>
+          <a href="/shop?filter=new" class="footer-link">New Arrivals</a>
+          <a href="/shop?filter=bestsellers" class="footer-link">Bestsellers</a>
+          <a href="/shop?filter=collections" class="footer-link">Collections</a>
+          <a href="/shop" class="footer-link">All Products</a>
+        </div>
+        <div>
+          <h4 class="footer-heading">Help</h4>
+          <a href="/orders" class="footer-link">Track Order</a>
+          <a href="#" class="footer-link">Size Guide</a>
+          <a href="#" class="footer-link">Returns & Exchange</a>
+          <a href="#" class="footer-link">FAQ</a>
+          <a href="#" class="footer-link">Contact Us</a>
+        </div>
+        <div>
+          <h4 class="footer-heading">Company</h4>
+          <a href="#" class="footer-link">About Us</a>
+          <a href="#" class="footer-link">Careers</a>
+          <a href="#" class="footer-link">Privacy Policy</a>
+          <a href="#" class="footer-link">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="border-t border-white/5">
+      <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs text-white/20">© 2025 Aniverse. All rights reserved.</p>
+        <div class="flex items-center gap-1.5">
+          <span class="text-[10px] text-white/20 mr-1">We accept:</span>
+          <span class="payment-badge">VISA</span>
+          <span class="payment-badge">MC</span>
+          <span class="payment-badge">UPI</span>
+          <span class="payment-badge">COD</span>
+          <span class="payment-badge">EMI</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+  {% endblock %}
+
+  <script>
+    document.addEventListener('alpine:init', () => {
+
+      Alpine.store('cart', {
+        items: JSON.parse(localStorage.getItem('aniverse-cart') || '[]'),
+        open: false,
+        get count() { return this.items.reduce((s, i) => s + i.quantity, 0); },
+        get total() { return this.items.reduce((s, i) => s + (i.price * i.quantity), 0); },
+        addItem(product, size, color, qty = 1) {
+          const existing = this.items.find(i => i.id === product.id && i.size === size && i.color === color);
+          if (existing) { existing.quantity += qty; } else { this.items.push({ ...product, size, color, quantity: qty }); }
+          this.open = true;
+          this.save();
+        },
+        removeItem(id, size, color) {
+          this.items = this.items.filter(i => !(i.id === id && i.size === size && i.color === color));
+          this.save();
+        },
+        updateQuantity(id, size, color, qty) {
+          if (qty <= 0) { this.removeItem(id, size, color); return; }
+          const item = this.items.find(i => i.id === id && i.size === size && i.color === color);
+          if (item) item.quantity = qty;
+          this.save();
+        },
+        clear() { this.items = []; this.save(); },
+        save() { localStorage.setItem('aniverse-cart', JSON.stringify(this.items)); }
+      });
+
+      Alpine.store('wishlist', {
+        items: JSON.parse(localStorage.getItem('aniverse-wishlist') || '[]'),
+        open: false,
+        get count() { return this.items.length; },
+        has(id) { return this.items.some(i => i.id === id); },
+        toggle(product) {
+          if (this.has(product.id)) {
+            this.items = this.items.filter(i => i.id !== product.id);
+          } else {
+            this.items.push(product);
+          }
+          this.save();
+        },
+        removeItem(id) {
+          this.items = this.items.filter(i => i.id !== id);
+          this.save();
+        },
+        save() { localStorage.setItem('aniverse-wishlist', JSON.stringify(this.items)); }
+      });
+
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

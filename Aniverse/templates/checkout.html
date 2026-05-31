@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Checkout — Aniverse{% endblock %}
+
+{% block content %}
+<div class="pt-24 pb-20 min-h-screen">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+      <h1 class="text-4xl font-black"><span class="text-white">Secure </span><span class="gradient-text">Checkout</span></h1>
+      <p class="text-white/40 text-sm mt-2">Complete your order below</p>
+    </div>
+
+    <div x-data="checkoutApp()" class="grid lg:grid-cols-2 gap-8">
+
+      <!-- Shipping Form -->
+      <div class="glass-card rounded-2xl p-6 border border-white/5">
+        <h2 class="text-lg font-black mb-5">Shipping Details</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="label-field">Full Name</label>
+            <input x-model="shipping.full_name" type="text" required placeholder="Your Name" class="input-genz w-full" />
+          </div>
+          <div>
+            <label class="label-field">Phone</label>
+            <input x-model="shipping.phone" type="tel" required placeholder="9876543210" class="input-genz w-full" />
+          </div>
+          <div>
+            <label class="label-field">Address</label>
+            <input x-model="shipping.address_line1" type="text" required placeholder="House/Flat, Street" class="input-genz w-full" />
+          </div>
+          <div>
+            <input x-model="shipping.address_line2" type="text" placeholder="Landmark, Colony (optional)" class="input-genz w-full" />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="label-field">City</label>
+              <input x-model="shipping.city" type="text" required placeholder="Delhi" class="input-genz w-full" />
+            </div>
+            <div>
+              <label class="label-field">State</label>
+              <input x-model="shipping.state" type="text" required placeholder="Delhi" class="input-genz w-full" />
+            </div>
+          </div>
+          <div>
+            <label class="label-field">PIN Code</label>
+            <input x-model="shipping.pincode" type="text" required placeholder="110001" maxlength="6" class="input-genz w-full" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary + Pay -->
+      <div class="space-y-4">
+        <div class="glass-card rounded-2xl p-6 border border-white/5">
+          <h2 class="text-lg font-black mb-4">Order Summary</h2>
+          <div class="space-y-3 max-h-64 overflow-y-auto">
+            <template x-for="item in $store.cart.items" :key="item.id + item.size + item.color">
+              <div class="flex gap-3 items-center">
+                <div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
+                  <template x-if="item.image_url"><img :src="item.image_url" class="w-full h-full object-cover" /></template>
+                  <template x-if="!item.image_url"><span>👕</span></template>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-white truncate" x-text="item.name"></p>
+                  <p class="text-xs text-white/30" x-text="`${item.size} · ${item.color} × ${item.quantity}`"></p>
+                </div>
+                <span class="text-sm font-black gradient-text" x-text="`₹${(item.price * item.quantity).toLocaleString('en-IN')}`"></span>
+              </div>
+            </template>
+          </div>
+          <div class="border-t border-white/5 mt-4 pt-4 space-y-2">
+            <div class="flex justify-between text-sm text-white/50">
+              <span>Shipping</span>
+              <span :class="$store.cart.total >= 999 ? 'text-neon-green font-semibold' : ''"
+                    x-text="$store.cart.total >= 999 ? 'FREE' : '₹99'"></span>
+            </div>
+            <div class="flex justify-between font-black text-lg pt-2 border-t border-white/5">
+              <span>Total</span>
+              <span class="gradient-text" x-text="`₹${finalTotal.toLocaleString('en-IN')}`"></span>
+            </div>
+          </div>
+        </div>
+
+        <template x-if="error">
+          <div class="glass-card rounded-xl p-4 border border-electric-pink/20 text-electric-pink text-sm" x-text="error"></div>
+        </template>
+
+        <button @click="startPayment()" :disabled="loading || $store.cart.items.length === 0"
+                class="btn-primary w-full text-base py-4 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span x-show="!loading">🔐 Pay with Razorpay</span>
+          <span x-show="loading">Processing...</span>
+        </button>
+
+        <div class="flex items-center justify-center gap-3 text-xs text-white/20">
+          <span>🔒 SSL Secured</span><span>·</span><span>Powered by Razorpay</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.label-field { display: block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.4); margin-bottom: .4rem; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+function checkoutApp() {
+  return {
+    loading: false,
+    error: null,
+    shipping: { full_name: '', phone: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '' },
+
+    get finalTotal() {
+      const t = Alpine.store('cart').total;
+      return t + (t >= 999 ? 0 : 99);
+    },
+
+    async startPayment() {
+      const cart = Alpine.store('cart');
+      if (!cart.items.length) return;
+      const s = this.shipping;
+      if (!s.full_name || !s.phone || !s.address_line1 || !s.city || !s.state || !s.pincode) {
+        this.error = 'Please fill in all required shipping fields.';
+        return;
+      }
+
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const orderResp = await fetch('/payment/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: this.finalTotal })
+        });
+        const order = await orderResp.json();
+        if (order.error) throw new Error(order.error);
+
+        const options = {
+          key: '{{ razorpay_key_id }}',
+          amount: order.amount,
+          currency: 'INR',
+          name: 'Aniverse',
+          description: 'Anime streetwear drop',
+          order_id: order.order_id,
+          handler: async (response) => {
+            const verifyResp = await fetch('/payment/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                cart_items: cart.items.map(i => ({
+                  id: i.id, name: i.name, price: i.price,
+                  quantity: i.quantity, size: i.size, color: i.color,
+                  image_url: i.image_url || null
+                })),
+                shipping_address: this.shipping,
+                total_amount: this.finalTotal,
+              })
+            });
+            const result = await verifyResp.json();
+            if (result.success) {
+              cart.clear();
+              window.location.href = '/payment/success';
+            } else {
+              this.error = result.error || 'Payment verification failed';
+              this.loading = false;
+            }
+          },
+          prefill: { name: s.full_name, contact: s.phone },
+          theme: { color: '#A855F7' },
+          modal: { ondismiss: () => { this.loading = false; } }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', (resp) => {
+          this.error = resp.error?.description || 'Payment failed';
+          this.loading = false;
+        });
+        rzp.open();
+      } catch (e) {
+        this.error = e.message || 'Something went wrong';
+        this.loading = false;
+      }
+    }
+  };
+}
+</script>
+{% endblock %}
